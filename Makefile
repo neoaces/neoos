@@ -9,7 +9,7 @@ LINKER = ld
 LDFLAGS += -static -nostdlib
 SHELL := /bin/zsh
 
-NAME = main
+NAME = kernel
 
 BUILDDIR = build
 SRCDIR = kernel
@@ -28,7 +28,7 @@ all: 	$(NAME)
 
 # Links the executable
 $(NAME): $(KERNELOBJS)
-> 	$(LINKER) $(LDFLAGS) $^ -o $(NAME)
+> 	$(LINKER) $(LDFLAGS) $^ -o $(BUILDDIR)/$(NAME).bin
 
 # Creates the object files for the linker ld
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(ASMEXT) 	
