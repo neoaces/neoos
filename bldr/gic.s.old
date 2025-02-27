@@ -1,0 +1,42 @@
+.global init_gic 
+
+init_gic:
+// Enable distributor    
+    ldr x0, =0x1e000000 // GICCPU
+    mov w1, #1 
+    str w1, [x0, #0x000]
+
+    mov w1, #0xFF // Set min priority
+    str w1, [x0, #0x004]
+
+    ldr x0, =0x1e001000 // GICDIST
+    mov w1, #1
+    str w1, [x0, #0x000]
+
+// EXAMPLE: Enable interrupt 13
+
+// Set priority in distributor
+    ldr x0, =0x1e001000     // GICDIST
+    mov w1, #0xA0           // Assigning priority 0xA0
+    str w1, [x0, #0x400 + (13 * 4)]
+
+// Enable interrupt in distributor
+    ldr x0, =0x1e001000     // GICDIST
+    ldr w1, [x0]            // Loads current enabled interrupts from memory
+    mov w2, #0b1 << 13      // Enabler for interrupt 13
+    orr w1, w1, w2
+    str w1, [x0, #0x100]    // Loads into GIC_ISENABLER<0>
+                            // Using offset = <intid / 32> !!
+
+// Route IRQ 13 to CPU 0
+    ldr x0, =0x1e001000         // GICDIST
+    ldr w1, [x0]                // Load current from memory
+    bic w1, w1, #(0xFF << 8)    // Bitwise AND of everything except byte 1
+                                // REASONING: 0xFF << 8 moves the 1s from 0xFF (0b11111111) to the second byte.
+                                // BIC takes the end of the inverted value (i.e all 1s except the second byte)
+    
+    orr w1, w1, #(0b1 << 8)     // Sets 1st bit of byte 2 to 1
+    str w1, [x0, #0x800 + ((13 / 4) * 4)]   // (int 13 / 4) = 3rd register,  3rd register * 4 since there are 4 words in one register.
+
+// Enable interrupts in the CPU
+    msr daifclr, #0b0011
